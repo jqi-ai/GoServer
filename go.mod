@@ -1,6 +1,6 @@
 module go_server
 
-go 1.24.4
+go 1.23.12
 
 require (
 	github.com/labstack/echo/v4 v4.13.4 // indirect
