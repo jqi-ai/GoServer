@@ -1,0 +1,17 @@
+# Git files
+.git
+.gitignore
+
+# Fly.io files
+fly.toml
+
+# Air hot reload
+.air.toml
+tmp/
+
+# Documentation
+*.md
+
+# Binary
+server
+GoServer
