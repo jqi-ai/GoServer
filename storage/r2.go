@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -116,7 +117,7 @@ func (r *R2Client) DeleteFile(ctx context.Context, key string) error {
 // ListFiles lists files in the bucket with optional prefix
 func (r *R2Client) ListFiles(ctx context.Context, prefix string) ([]string, error) {
 	var files []string
-	
+
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(r.bucketName),
 	}
@@ -139,12 +140,12 @@ func (r *R2Client) ListFiles(ctx context.Context, prefix string) ([]string, erro
 // GetPresignedURL generates a presigned URL for downloading
 func (r *R2Client) GetPresignedURL(ctx context.Context, key string, expireMinutes int64) (string, error) {
 	presignClient := s3.NewPresignClient(r.client)
-	
+
 	request, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
 	}, func(opts *s3.PresignOptions) {
-		opts.Expires = expireMinutes * 60 // Convert minutes to seconds
+		opts.Expires = time.Duration(expireMinutes) * time.Minute // Convert minutes to time.Duration
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create presigned URL: %w", err)

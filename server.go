@@ -12,6 +12,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var r2Client *storage.R2Client
@@ -37,9 +39,9 @@ func init() {
 
 // UploadResponse represents the response after successful upload
 type UploadResponse struct {
-	Key      string `json:"key"`
-	URL      string `json:"url,omitempty"`
-	Message  string `json:"message"`
+	Key     string `json:"key"`
+	URL     string `json:"url,omitempty"`
+	Message string `json:"message"`
 }
 
 // ErrorResponse represents an error response
