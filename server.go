@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"go_server/storage"
 	"net/http"
@@ -195,40 +194,15 @@ func listImages(c echo.Context) error {
 	})
 }
 
-func basicAuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username := os.Getenv("AUTH_USERNAME")
-		password := os.Getenv("AUTH_PASSWORD")
-		auth := r.Header.Get("Authorization")
-
-		if auth == "" || !validateBasicAuth(auth, username, password) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
+func basicAuthMiddleware(username, password string) echo.MiddlewareFunc {
+	return middleware.BasicAuth(func(u, p string, ctx echo.Context) (bool, error) {
+		if u == username && p == password {
+			return true, nil
 		}
-
-		next.ServeHTTP(w, r)
+		return false, nil
 	})
 }
 
-func validateBasicAuth(auth, username, password string) bool {
-	const prefix = "Basic "
-	if !strings.HasPrefix(auth, prefix) {
-		return false
-	}
-
-	payload, err := base64.StdEncoding.DecodeString(auth[len(prefix):])
-	if err != nil {
-		return false
-	}
-
-	pair := strings.SplitN(string(payload), ":", 2)
-	if len(pair) != 2 {
-		return false
-	}
-
-	return pair[0] == username && pair[1] == password
-}
 func main() {
 	e := echo.New()
 
@@ -236,6 +210,13 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+	authUsername := os.Getenv("AUTH_USERNAME")
+	authPassword := os.Getenv("AUTH_PASSWORD")
+	if authUsername == "" || authPassword == "" {
+		fmt.Println("Warning: Basic Auth credentials not set. Please configure AUTH_USERNAME and AUTH_PASSWORD.")
+	} else {
+		e.Use(basicAuthMiddleware(authUsername, authPassword))
+	}
 
 	// Routes
 	e.GET("/", func(c echo.Context) error {
@@ -251,10 +232,6 @@ func main() {
 	api.GET("/images/:key", downloadImage)
 	api.DELETE("/images/:key", deleteImage)
 	api.GET("/images", listImages)
-
-	http.Handle("/", basicAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Welcome to the family server!")
-	})))
 
 	// Get port from environment variable or default to 8080
 	port := os.Getenv("PORT")
