@@ -137,6 +137,37 @@ func (r *R2Client) ListFiles(ctx context.Context, prefix string) ([]string, erro
 	return files, nil
 }
 
+// ListFilesPage lists files with pagination support using continuation tokens
+func (r *R2Client) ListFilesPage(ctx context.Context, prefix string, limit int32, continuationToken string) ([]string, string, bool, error) {
+	input := &s3.ListObjectsV2Input{
+		Bucket:  aws.String(r.bucketName),
+		MaxKeys: limit,
+	}
+	if prefix != "" {
+		input.Prefix = aws.String(prefix)
+	}
+	if continuationToken != "" {
+		input.ContinuationToken = aws.String(continuationToken)
+	}
+
+	result, err := r.client.ListObjectsV2(ctx, input)
+	if err != nil {
+		return nil, "", false, fmt.Errorf("failed to list files: %w", err)
+	}
+
+	keys := make([]string, 0, len(result.Contents))
+	for _, object := range result.Contents {
+		keys = append(keys, *object.Key)
+	}
+
+	nextCursor := ""
+	if result.NextContinuationToken != nil {
+		nextCursor = *result.NextContinuationToken
+	}
+
+	return keys, nextCursor, result.IsTruncated, nil
+}
+
 // GetPresignedURL generates a presigned URL for downloading
 func (r *R2Client) GetPresignedURL(ctx context.Context, key string, expireMinutes int64) (string, error) {
 	presignClient := s3.NewPresignClient(r.client)

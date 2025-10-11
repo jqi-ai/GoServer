@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -172,7 +173,7 @@ func deleteImage(c echo.Context) error {
 	})
 }
 
-// listImages handles listing all images
+// listImages handles listing all images with pagination
 func listImages(c echo.Context) error {
 	if r2Client == nil {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
@@ -180,8 +181,20 @@ func listImages(c echo.Context) error {
 		})
 	}
 
+	// Parse query params for pagination
+	limit := 20
+	if v := c.QueryParam("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			if n > 100 {
+				n = 100 // cap to prevent large scans
+			}
+			limit = n
+		}
+	}
+	cursor := c.QueryParam("cursor")
+
 	ctx := context.Background()
-	files, err := r2Client.ListFiles(ctx, "images/")
+	files, nextCursor, hasMore, err := r2Client.ListFilesPage(ctx, "images/", int32(limit), cursor)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: fmt.Sprintf("Failed to list images: %v", err),
@@ -189,8 +202,10 @@ func listImages(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"images": files,
-		"count":  len(files),
+		"images":     files,
+		"count":      len(files),
+		"nextCursor": nextCursor,
+		"hasMore":    hasMore,
 	})
 }
 
