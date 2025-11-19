@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.8
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.12
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.1
+	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.4
 )
 
@@ -25,7 +26,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.34.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.4 // indirect
 	github.com/aws/smithy-go v1.23.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

@@ -141,7 +141,7 @@ func (r *R2Client) ListFiles(ctx context.Context, prefix string) ([]string, erro
 func (r *R2Client) ListFilesPage(ctx context.Context, prefix string, limit int32, continuationToken string) ([]string, string, bool, error) {
 	input := &s3.ListObjectsV2Input{
 		Bucket:  aws.String(r.bucketName),
-		MaxKeys: limit,
+		MaxKeys: aws.Int32(limit),
 	}
 	if prefix != "" {
 		input.Prefix = aws.String(prefix)
@@ -165,7 +165,7 @@ func (r *R2Client) ListFilesPage(ctx context.Context, prefix string, limit int32
 		nextCursor = *result.NextContinuationToken
 	}
 
-	return keys, nextCursor, result.IsTruncated, nil
+	return keys, nextCursor, *result.IsTruncated, nil
 }
 
 // GetPresignedURL generates a presigned URL for downloading
