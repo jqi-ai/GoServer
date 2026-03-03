@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -51,7 +51,7 @@ type ErrorResponse struct {
 }
 
 // uploadImage handles image upload
-func uploadImage(c echo.Context) error {
+func uploadImage(c *echo.Context) error {
 	if r2Client == nil {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error: "Storage service not configured",
@@ -106,7 +106,7 @@ func uploadImage(c echo.Context) error {
 }
 
 // downloadImage handles image download
-func downloadImage(c echo.Context) error {
+func downloadImage(c *echo.Context) error {
 	if r2Client == nil {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error: "Storage service not configured",
@@ -146,7 +146,7 @@ func downloadImage(c echo.Context) error {
 }
 
 // deleteImage handles image deletion
-func deleteImage(c echo.Context) error {
+func deleteImage(c *echo.Context) error {
 	if r2Client == nil {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error: "Storage service not configured",
@@ -174,7 +174,7 @@ func deleteImage(c echo.Context) error {
 }
 
 // listImages handles listing all images with pagination
-func listImages(c echo.Context) error {
+func listImages(c *echo.Context) error {
 	if r2Client == nil {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error: "Storage service not configured",
@@ -209,25 +209,16 @@ func listImages(c echo.Context) error {
 	})
 }
 
-func basicAuthMiddleware(username, password string) echo.MiddlewareFunc {
-	return middleware.BasicAuth(func(u, p string, ctx echo.Context) (bool, error) {
-		if u == username && p == password {
-			return true, nil
-		}
-		return false, nil
-	})
-}
-
 func main() {
 	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORS("https://api.images.com"))
 
 	// Routes
-	e.GET("/", func(c echo.Context) error {
+	e.GET("/", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
 			"message": "Image Storage API",
 			"status":  "running",
@@ -236,7 +227,6 @@ func main() {
 
 	// Image endpoints
 	api := e.Group("/api")
-	api.Use(middleware.CORS("https://fly.dev"))
 
 	api.POST("/images/upload", uploadImage)
 	api.GET("/images/:key", downloadImage)
@@ -249,5 +239,5 @@ func main() {
 		port = "8080"
 	}
 
-	e.Logger.Fatal(e.Start(":" + port))
+	e.Start(":" + port)
 }
