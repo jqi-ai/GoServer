@@ -225,13 +225,6 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
-	authUsername := os.Getenv("AUTH_USERNAME")
-	authPassword := os.Getenv("AUTH_PASSWORD")
-	if authUsername == "" || authPassword == "" {
-		fmt.Println("Warning: Basic Auth credentials not set. Please configure AUTH_USERNAME and AUTH_PASSWORD.")
-	} else {
-		e.Use(basicAuthMiddleware(authUsername, authPassword))
-	}
 
 	// Routes
 	e.GET("/", func(c echo.Context) error {
@@ -243,6 +236,8 @@ func main() {
 
 	// Image endpoints
 	api := e.Group("/api")
+	api.Use(middleware.CORS("https://fly.dev"))
+
 	api.POST("/images/upload", uploadImage)
 	api.GET("/images/:key", downloadImage)
 	api.DELETE("/images/:key", deleteImage)
