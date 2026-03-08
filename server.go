@@ -215,7 +215,7 @@ func main() {
 	// Middleware
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS("https://fly.dev"))
+	e.Use(middleware.CORS("https://fly.dev", "*"))
 
 	// Routes
 	e.GET("/", func(c *echo.Context) error {
@@ -227,9 +227,6 @@ func main() {
 
 	// Image endpoints
 	api := e.Group("/api")
-	api.Use(middleware.KeyAuth(func(c *echo.Context, key string, source middleware.ExtractorSource) (bool, error) {
-		return key == "valid", nil
-	}))
 
 	api.POST("/images/upload", uploadImage)
 	api.GET("/images/:key", downloadImage)
